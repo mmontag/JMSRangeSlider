@@ -29,6 +29,9 @@ public class JMSRangeSlider: NSControl {
 
     // Previous mouse location
     private var previousLocation: CGPoint = CGPoint()
+
+  private var previousLower: Double = 0.0
+  private var previousUpper: Double = 0.0
     
     // Private vars
     private let trackLayer: RangeSliderTrackLayer = RangeSliderTrackLayer()
@@ -206,6 +209,8 @@ public class JMSRangeSlider: NSControl {
         
         let location = evt.locationInWindow
         previousLocation = convertPoint(location, fromView: nil)
+      previousLower = lowerValue
+      previousUpper = upperValue
         
         if lowerCellLayer.frame.contains(previousLocation) {
             lowerCellLayer.highlighted = true
@@ -225,19 +230,25 @@ public class JMSRangeSlider: NSControl {
         let pointInView = convertPoint(location, fromView: nil)
 
         // Get delta
-        let deltaLocation = self.isVertical() ? Double(pointInView.y - previousLocation.y) : Double(pointInView.x - previousLocation.x)
+        let deltaLocation = self.isVertical() ?
+          Double(pointInView.y - previousLocation.y) :
+          Double(pointInView.x - previousLocation.x)
         
-        let deltaValue = (maxValue - minValue) * deltaLocation / (self.isVertical() ? Double(bounds.height - cellHeight) : Double(bounds.width - cellWidth))
+        let deltaValue = (maxValue - minValue) * deltaLocation / (self.isVertical() ?
+          Double(bounds.height - cellHeight) :
+          Double(bounds.width - cellWidth))
         
-        previousLocation = pointInView
-        
+//        previousLocation = pointInView
+
         // Update values
         if lowerCellLayer.highlighted {
-            lowerValue += deltaValue
+            lowerValue = previousLower + deltaValue
             lowerValue = boundValue(lowerValue, toLowerValue: minValue, upperValue: upperValue)
+            lowerValue = round(lowerValue)
         } else if upperCellLayer.highlighted {
-            upperValue += deltaValue
+            upperValue = previousUpper + deltaValue
             upperValue = boundValue(upperValue, toLowerValue: lowerValue, upperValue: maxValue)
+            upperValue = round(upperValue)
         }
         
         // Update Layer
@@ -256,7 +267,6 @@ public class JMSRangeSlider: NSControl {
         // Cells not highlighted anymore
         lowerCellLayer.highlighted = false
         upperCellLayer.highlighted = false
-        
     }
     
     // @function        isVertical
